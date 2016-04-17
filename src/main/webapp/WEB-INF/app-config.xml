@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.2.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+       http://www.springframework.org/schema/security
+       http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+    <bean id="employeeController" class="com.saddham.controller.EmployeeController"></bean>
+
+    <bean id="employeeService" class="com.saddham.service.EmployeeServiceImpl"></bean>
+
+    <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <!-- Turn off working out content type based on URL file extension, should fall back to looking at the Accept headers -->
+        <property name="favorPathExtension" value="false" />
+    </bean>
+
+    <bean id="restAuthenticationEntryPoint" class="com.saddham.config.auth.RestAuthenticationEntryPoint"/>
+
+    <bean id="mySuccessHandler" class="com.saddham.config.auth.MySavedRequestAwareAuthenticationSuccessHandler"/>
+
+    <context:annotation-config />
+
+    <mvc:annotation-driven content-negotiation-manager="contentNegotiationManager">
+        <mvc:message-converters>
+            <bean class="com.saddham.message.converter.YamlMessageConverter"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <security:http entry-point-ref="restAuthenticationEntryPoint">
+        <security:intercept-url pattern="/api/**" access="ROLE_USER,ROLE_ADMIN"/>
+        <security:form-login authentication-success-handler-ref="mySuccessHandler" />
+        <security:logout />
+    </security:http>
+
+    <security:authentication-manager alias="authenticationManager">
+        <security:authentication-provider>
+            <security:user-service>
+                <security:user name="admin" password="admin" authorities="ROLE_ADMIN"/>
+                <security:user name="user" password="user" authorities="ROLE_USER"/>
+            </security:user-service>
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+</beans>
